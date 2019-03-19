@@ -1,5 +1,5 @@
-# SpectralFinance
-Spectral Finance
+# tradeMachine
+trading machine
 
 ### Thank You to:   
 Source|Link|For   
