@@ -1,98 +1,98 @@
-# SpectralFinance
-Spectral Finance
+# tradeMachine
+Stock Trading Beginnings
 
 ### Thank You to:   
 Source|Link|For   
 ------- |  -------- | -------   
 **Galvanize Staff** | [GitHub](https://github.com/gSchool) | Everything
-**Siraj Raval** | [GitHub](https://github.com/llSourcell) | RL / Time Series
-**Edward Lu** | [GitHub](https://github.com/edwardhdlu) | RL Stocks
-**Michael Halls-Moore** | [GitHub](https://github.com/mhallsmoore) | Engine
+**Siraj Raval** | [GitHub](https://github.com/llSourcell) | ML / Time Series
+**Derrick Mwiti** | [Medium](https://heartbeat.fritz.ai/using-a-keras-long-shortterm-memory-lstm-model-to-predict-stock-prices-a08c9f69aa74) | LSTM Stocks
 
-Disclaimer - I reused no code, but ideas are just as important,
-I make no guarantees express or implied and provide no service,
-since this involves a personal account released information/code will be incomplete.  
+Note - I reused no code, but ideas are just as important.   
+I make no guarantees, though you probably don't want to use this model.
 
 #### The goal is to create a stock trading machine.  
-![classes](resources/classes.svg)   
+![classes](resources/classes.png)   
 
 This has varying levels of complexity but as an MVP we want the following:  
-* Collect Time Based Data: Prices, News, Multiple Stocks and Bonds  
-* Create an Agent to act on the data through time  
-* Extras: Execute trades, manage a portfolio, learn   
+* Collect Time Based Data: Prices, News, Multiple Stocks  
+* Create a Neural Network to predict data through time  
+* Extras: Execute trades, manage a portfolio, RL
 
 #### Limited Project Scope for Capstone 2  
-![classes_initial](resources/classes_initial.svg)   
+![classes_initial](resources/classes_initial.png)   
 
-With the above structure, we can focus on the "bot".  
-The bot will analyze a data stream and make predictions...
-Once deployed, the bot will need to:
+With the above structure, we can focus on the "bot" and it's beginnings.  
 - [ ] Check data instances or start new data instance (allows multiple bots on same stock)
-- [ ] Train up to current time on given stock (cram)
+- [x] Train up to current time on given stock (cram)
 - [ ] Train on new data as time progresses (update)
-- [ ] Be controlled easily (reset, change parameters, kill)  
-- [ ] And obviously, predict stuff / learn
+- [x] Be controlled easily (reset, change parameters, kill)  
+- [x] And obviously, predict stuff
 
 ### Review of Current Methods  
 #### Time Series Methods   
 - [ ] ARIMA    
 - [ ] RNN  
-- [x] RNN + LSTM  
+- [x] +LSTM  
 - [ ] Gut Feel (Humans)  
 
 #### Stock Trading (IMO)  
 - [ ] Intraday/High Frequency (Technicals, Statistics, Some Indicators)  
 - [ ] EOD (Technicals, Indicators, News)  
 - [x] Swing/Position (Macro News, Specific News, Indicators)   
-- [ ] Trend Trading (Buy, Sell, Hold, Ride Trend)  
+- [ ] Trend Trading (Buy, Sell, Hold, Ride Trend)   
 
-#### Reinforcement Learning   
-- [x] Q Learning    
-- [ ] Policy Gradients   
-- [ ] Actor-Critic (Deep Deterministic Policy Gradients for continuous actions)   
-
-### Putting it Together  (Thoughts)
+### Putting it Together
 
 The flow of information through the bot will be as follows:  
-The handler provides the bot with state information, rewards, and a "done" variable (from environment interaction)
+The handler provides the bot with information (prices for now)
 State information is the length of the time window, and is passed element
-by element into an activation function to encourage convergence (Not sure about this, see image below)  
-State information is passed elementwise into input nodes  
-Typical cascade through the network, except output is Buy, Sell, Hold  (May use LinearACTV to elicit confidence in scalar value, something like a sigmoid removes information there)  
+by element into a scaling function
+Information is passed element-wise into input LSTM nodes  
+Typical cascade through the network, except output is scaled price prediction
 
-![State](resources/state.svg)
+![State](resources/state.png)
 
-##### The rewards are where everything gets interesting:  
-The bot needs to learn:
-* that a buy now enables a sell later
-* A lower buy than sell yields reward  
-* That holding is a valid strategy   
-Likely, the time it waits between transactions, it's hungriness for profit and other things it learns will
-be directly related to our reward scheme. I may train on OpenAI Stock Gym while i get other stuff working.
+### The Brain for Now
+Inputs: Settled on 3 weeks of daily price (~3000 Train, ~1000 test, Window of 21 Days)  
+Long Short Term Memory Layer (100 Units, 'tanh')   
+Dropout Layer at 30%   
+Dense Layer (20 Units, 'relu')   
+Output Layer (7 Future Days)   
 
-1. Buy
-> The buy needs to include a punishment, in extreme cases it also would include a volume but that may require extensive training  
+![classes](resources/models/LSTM_03-22_00:33graph.png)  
 
-2. Sell
-> The sell will be a function of the bots inventory. If the inventory is empty it cant sell.   
-If it can sell, (I may include another set of logic for volume of sale)  It will reap reward. **But** the data we have is differenced prices, hence we need to include raw prices that the bot can easily access in order to calculate size of reward.
+#### Getting There
+It was a rough start...    
 
-3. Hold
-> It must learn to be patient if the price isn't moving.   
-I may want to include some tiny reward to encourage the swing trading / minimum purchase needs of my account
+![classes](resources/models/LSTM_03-21_22:25PredVsActual.png)
 
-4. Exploration
-> I am thinking of forcing the bot to buy occasionally at early time steps but having epsilon decay with the total number of buys the bot has made. In this way, I'll force some reward back into the expectation.
+![classes](resources/models/LSTM_03-21_22:55PredVsActual.png)   
 
+![classes](resources/models/LSTM_03-21_23:36PredVsActual.png)   
 
-#####The Data Engine will be made up of:  
+Eventually (Eventually), I settled in on the parameters you noticed above
+which... yielded "believable" results.   
 
-Level | Source | Destination  
------ | ------ | ------  
-Stock Data | From API | To Clean Method  
-Stationary Data | From Method | To Intermediate Data Storage
-News | From API | To Clean/NLP Method
-Sentiment | From NLP Method | To Intermediate Data
-Intermediate Data | From local | To Environment.
+![classes](resources/models/LSTM_03-21_23:57PredVsActual.png)   
 
-You'll notice the modularity of the above. I can easily add or remove methods for NLP, differencing, or whatever.
+![classes](resources/models/LSTM_03-22_00:00PredVsActual_Zoom.png)   
+
+In an effort to allow the LSTM to adaptively filter the data, I did not do so.  
+In hindsight, the seemingly random variance hides trends, perhaps unobservable but I am not convinced of that yet.  
+
+![classes](resources/models/LSTM_03-22_00:33PredVsActual_Zoom.png)   
+
+#### Reflections
+1) The above changing variance screams non-stationary data, but we know these signals have "forcing functions" i.e. uncertainty in the market or what have you.   
+2) It appears our bot has learned quite quickly to predict the mean of the incoming data.
+Given both (1) and (2), I look forward to including tons of non-traditional data now that I have a working model.  
+
+![classes](resources/models/LSTM_03-22_00:33loss.png)
+
+Out of curiosity, what follows is the cumulative sum of the previously "differenced" data.  
+Theoretically, the sum would yield the original data yet in the prediction, we predict on windows.  
+One alternative is an expanding window instead of a sliding window. I could not explore the ramifications of this to the LSTM.  
+Meaning: Later timesteps would include the option bot to use discounted earlier information but this is more computationally expensive.
+
+![classes](resources/models/LSTM_03-22_00:12CumSum.png)

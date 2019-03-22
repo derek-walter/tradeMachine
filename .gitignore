@@ -1,4 +1,4 @@
 *.csv
-*.json
+
 *.ipynb
 *.ipynb_checkpoints
